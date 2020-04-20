@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiPower, FiTrash2 } from 'react-icons/fi';
+import { Link, useHistory } from 'react-router-dom';
+import { FiPower, FiTrash2, FiEdit } from 'react-icons/fi';
 
 import api from '../../services/api';
 
@@ -16,6 +16,8 @@ export default function Profile() {
   const userId = localStorage.getItem('userId');
   const userName = localStorage.getItem('userName');
 
+  const history = useHistory();
+
   useEffect(() => {
     api.get('profiles', {
       headers: {
@@ -26,6 +28,29 @@ export default function Profile() {
     })
   }, [userId]);
 
+  async function handleDeleteRemedy(id) {
+    try {
+      await api.delete(`remedys/${id}`, {
+        headers: {
+          Authorization: userId,
+        }
+      });
+
+      setRemedys(remedys.filter(remedy => remedy.id !== id));
+
+    } catch (error) {
+      alert('Erro ao deletar caso, tente novamente.')
+    }
+  }
+
+  function handleUpdateRemedy(id) {
+    history.push(`remedys/${id}`);
+  }
+
+  function handleLogout() {
+    localStorage.clear();
+    history.push('/');
+  }
 
   return (
     <div className="profile-container">
@@ -36,7 +61,7 @@ export default function Profile() {
         <Link className="button" to="/remedys/new">
           Cadastrar novo medicamento
         </Link>
-        <button type="button">
+        <button onClick={handleLogout} type="button">
           <FiPower size={18} color="#295872" />
         </button>
       </header>
@@ -45,7 +70,7 @@ export default function Profile() {
         return (
           <table >
             <tr>
-              <th className="th" colSpan="5">
+              <th className="th" colSpan="6">
                 <p>{turno}</p>
               </th>
             </tr>
@@ -54,7 +79,8 @@ export default function Profile() {
               <th>Remédio</th>
               <th>Observação</th>
               <th>Qtd</th>
-              <th>Horas</th>
+              <th>Horário</th>
+              <th></th>
               <th></th>
             </tr>
 
@@ -64,10 +90,19 @@ export default function Profile() {
                   <tr key={remedy.id}>
                     <th>{remedy.name}</th>
                     <th>{remedy.description}</th>
-                    <th>{remedy.shift}</th>
+                    <th>{remedy.amount}</th>
                     <th>{remedy.hour}</th>
+
                     <th>
-                      <button type="button">
+                      <Link to="/remedys/edit">
+                        <button onClick={() => handleUpdateRemedy(remedy.id)} type="button">
+                          <FiEdit size={20} color="#295872" />
+                        </button>
+                      </Link>
+                    </th>
+
+                    <th>
+                      <button onClick={() => handleDeleteRemedy(remedy.id)} type="button">
                         <FiTrash2 size={20} color="#295872" />
                       </button>
                     </th>
